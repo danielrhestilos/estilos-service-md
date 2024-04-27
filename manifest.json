@@ -1,9 +1,9 @@
 {
-  "name": "service-example",
-  "vendor": "vtex",
+  "name": "estilos-service-md",
+  "vendor": "estilospe",
   "version": "0.2.25",
-  "title": "Service Example",
-  "description": "Reference app for VTEX IO Services",
+  "title": "Estilos md service",
+  "description": "Estilos md service",
   "mustUpdateAt": "2018-01-04",
   "categories": [],
   "dependencies": {},
@@ -16,6 +16,23 @@
   },
   "credentialType": "absolute",
   "policies": [
+    {
+      "name": "ADMIN_DS"
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "api.vtex.com",
+        "path": "/dataentities/*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "portal.vtexcommercestable.com.br",
+        "path": "*"
+      }
+    },
     {
       "name": "outbound-access",
       "attrs": {
