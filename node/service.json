@@ -9,6 +9,10 @@
     "status": {
       "path": "/_v/status/:code",
       "public": true
+    },
+    "validateIntento": {
+      "path": "/_v/validate-intento",
+      "public": true
     }
   }
 }
