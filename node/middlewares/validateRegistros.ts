@@ -8,7 +8,8 @@ export async function validateRegistrosProps(
   const {
     clients: {masterdata},
   } = ctx
-  let registrosUltimas24Horas=[]
+
+  let algunCorrecto = null 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const formatDateYesterday = yesterday.toISOString().slice(0, 10);
@@ -16,8 +17,10 @@ export async function validateRegistrosProps(
     {
       dataEntity:'CI',
       fields:["fecha","hora","resultado","numero"],
-      pagination: {page:1,pageSize:3},
-      where : `(numero=${body.numero} AND resultado=false) AND (fecha between ${formatDateYesterday}T${body.hora} AND ${body.fecha})`
+      pagination: {page:1,pageSize:10},
+    //   where : `(numero=${body.numero}) AND (fecha between ${formatDateYesterday}T${body.hora} AND ${body.fecha})`
+      where : `(numero=${body.numero}) AND (fecha between ${formatDateYesterday} AND ${body.fecha})`
+    //   where : `(numero=${body.numero}) `
     })
 
     if (!docs) {
@@ -25,18 +28,28 @@ export async function validateRegistrosProps(
         return
     }
     else {
-        registrosUltimas24Horas = docs.data.filter((registro:any) => {
-            const fechaRegistro = new Date(`${registro.fecha.split('T')[0]}T${registro.hora}`);
-            return fechaRegistro >= yesterday;
-        });
+        algunCorrecto  = docs.data.some((registro:any) => registro.resultado == true)
     }
 
     ctx.status = 200
-    ctx.body = {
-        attempts: registrosUltimas24Horas.length,
-        ok: registrosUltimas24Horas.length ==3 ,
-        msg: registrosUltimas24Horas.length ==3 ?"Vuelve a intentar en 24 horas" :"Ok"
-    } 
+
+    if(algunCorrecto) {
+        ctx.body = {
+        attempts: 0,
+        ok: true,
+        msg: "Puedes intentar de nuevo."  ,
+        docs
+    }}
+    
+    else {
+        ctx.body = {
+            attempts: docs.data.length,
+            formatDateYesterday,
+            docs,
+            ok: docs.data.length <3 ,
+            msg: docs.data.length >=3 ?". Por motivos de seguridad, hemos suspendido temporalmente el uso de la tarjeta por un período de 24 horas. Por favor, no dudes en contactarnos al  para obtener asistencia adicional" :"Recuerda que tienes 3 intentos para ingresar tu clave"
+        } 
+    }
     
     ctx.set('Cache-Control', 'no-cache')
     await next()
