@@ -18,9 +18,7 @@ export async function validateRegistrosProps(
       dataEntity:'CI',
       fields:["fecha","hora","resultado","numero"],
       pagination: {page:1,pageSize:10},
-    //   where : `(numero=${body.numero}) AND (fecha between ${formatDateYesterday}T${body.hora} AND ${body.fecha})`
-      where : `(numero=${body.numero}) AND (fecha between ${formatDateYesterday} AND ${body.fecha})`
-    //   where : `(numero=${body.numero}) `
+      where : `(numero=${body.numero}) AND (fecha between ${formatDateYesterday}T${body.hora} AND ${body.fecha})`
     })
 
     if (!docs) {
@@ -47,7 +45,7 @@ export async function validateRegistrosProps(
             formatDateYesterday,
             docs,
             ok: docs.data.length <3 ,
-            msg: docs.data.length >=3 ?". Por motivos de seguridad, hemos suspendido temporalmente el uso de la tarjeta por un período de 24 horas. Por favor, no dudes en contactarnos al  para obtener asistencia adicional" :"Recuerda que tienes 3 intentos para ingresar tu clave"
+            msg: docs.data.length >=3 ?"Por motivos de seguridad, hemos suspendido temporalmente el uso de la tarjeta por un período de 24 horas. Por favor, no dudes en contactarnos al  para obtener asistencia adicional" :"Recuerda que tienes 3 intentos para ingresar tu clave"
         } 
     }
     
