@@ -13,6 +13,11 @@
     "validateIntento": {
       "path": "/_v/validate-intento",
       "public": true
+    },
+    "validateRegistros": {
+      "path": "/_v/validate-registros",
+      "public": true
     }
+    
   }
 }

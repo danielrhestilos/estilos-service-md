@@ -1,12 +1,14 @@
 import type { ClientsConfig, ServiceContext, RecorderState } from '@vtex/api'
-import { LRUCache, method, Service } from '@vtex/api'
+import { LRUCache, method, Service , Cached} from '@vtex/api'
 
 import { Clients } from './clients'
 import { status } from './middlewares/status'
 import { validate } from './middlewares/validate'
 import { validateIntentoProps } from './middlewares/validateIntento'
+import { validateRegistrosProps } from './middlewares/validateRegistros'
 
-const TIMEOUT_MS = 800
+const TIMEOUT_MS = 3000
+const CONCURRENCY = 10
 
 // Create a LRU memory cache for the Status client.
 // The 'max' parameter sets the size of the cache.
@@ -15,6 +17,18 @@ const TIMEOUT_MS = 800
 // or a 'cache-control' header with a 'max-age' value. If neither exist, the response will not be cached.
 // To force responses to be cached, consider adding the `forceMaxAge` option to your client methods.
 const memoryCache = new LRUCache<string, any>({ max: 5000 })
+
+const tenantCacheStorage = new LRUCache<string, Cached>({
+  max: 3000
+})
+
+const segmentCacheStorage = new LRUCache<string, Cached>({
+  max: 3000
+})
+
+metrics.trackCache('tenant', tenantCacheStorage)
+metrics.trackCache('segment', segmentCacheStorage)
+
 
 metrics.trackCache('status', memoryCache)
 
@@ -25,13 +39,31 @@ const clients: ClientsConfig<Clients> = {
   options: {
     // All IO Clients will be initialized with these options, unless otherwise specified.
     default: {
-      retries: 2,
+      exponentialTimeoutCoefficient: 2,
+      exponentialBackoffCoefficient: 2,
+      initialBackoffDelay: 50,
+      retries: 5,
       timeout: TIMEOUT_MS,
+      concurrency: CONCURRENCY,
+    },
+    tenant: {
+      memoryCache: tenantCacheStorage,
+      timeout: TIMEOUT_MS
+    },
+    segment: {
+      memoryCache: segmentCacheStorage,
+      timeout:  TIMEOUT_MS
+    },
+    events: {
+      timeout: TIMEOUT_MS
+    },
+    vbase: {
+      concurrency: 5,
     },
     // This key will be merged with the default options and add this cache to our Status client.
-    status: {
-      memoryCache,
-    },
+    // status: {
+    //   memoryCache,
+    // },
   },
 }
 
@@ -46,6 +78,7 @@ declare global {
 }
 
 // Export a service that defines route handlers and client options.
+
 export default new Service({
   clients,
   routes: {
@@ -56,5 +89,8 @@ export default new Service({
     validateIntento:method({
       PUT: [validateIntentoProps]
     }),
+    validateRegistros:method({
+      PUT: [validateRegistrosProps]
+    })
   },
 })
